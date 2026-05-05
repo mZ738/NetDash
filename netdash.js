@@ -154,9 +154,23 @@ class NetDashCard extends LitElement {
     this._tt = null; 
   }
 
+  /* 
+    FIX: HA passes an empty config {} to render the preview in the "Add Card" dialog.
+    If setConfig throws an error, HA masks it as "Custom element doesn't exist".
+    We must gracefully handle empty configs here.
+  */
   setConfig(c) {
-    if (!c.devices || !Array.isArray(c.devices)) throw new Error('NetDash: "devices" array is required');
-    this._config = JSON.parse(JSON.stringify(c)); 
+    this._config = { 
+      title: 'NetDash',
+      show_search: true,
+      show_filters: true,
+      show_stats: true,
+      vlans: [],
+      devices: [],
+      ...c
+    };
+    if (!Array.isArray(this._config.vlans)) this._config.vlans = [];
+    if (!Array.isArray(this._config.devices)) this._config.devices = [];
     this._search = ''; 
     this._filter = 'all';
   }
@@ -337,9 +351,35 @@ class NetDashCard extends LitElement {
         </div>
       </div>`;
   }
+
+  _rPreview() {
+    return html`
+      <div class="nd-wrap">
+        <div class="nd-hdr">
+          <div class="nd-hdr-left">
+            <div class="nd-logo"><ha-icon icon="mdi:lan"></ha-icon></div>
+            <div>
+              <div class="nd-title">NetDash</div>
+              <div class="nd-sub">Network Device Dashboard</div>
+            </div>
+          </div>
+        </div>
+        <div class="nd-empty">
+          <ha-icon icon="mdi:lan-connect"></ha-icon>
+          <div style="font-size:14px;font-weight:500;margin-bottom:3px;color:var(--nd-muted)">Configure your devices</div>
+          <div style="font-size:12px">Use the visual editor to add VLANs and devices.</div>
+        </div>
+      </div>`;
+  }
   
   render() {
     if (!this._config) return nothing;
+    
+    /* Show a friendly preview if no devices are configured yet */
+    if (!this._config.devices || this._config.devices.length === 0) {
+      return this._rPreview();
+    }
+
     const g = this._grouped(this._filtered());
     return html`
       <div class="nd-wrap">
