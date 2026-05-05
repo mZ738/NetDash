@@ -154,11 +154,6 @@ class NetDashCard extends LitElement {
     this._tt = null; 
   }
 
-  /* 
-    FIX: HA passes an empty config {} to render the preview in the "Add Card" dialog.
-    If setConfig throws an error, HA masks it as "Custom element doesn't exist".
-    We must gracefully handle empty configs here.
-  */
   setConfig(c) {
     this._config = { 
       title: 'NetDash',
@@ -175,7 +170,8 @@ class NetDashCard extends LitElement {
     this._filter = 'all';
   }
 
-  set hass() {}
+  /* FIX: Setters MUST have exactly one formal parameter */
+  set hass(_hass) {}
   
   getCardSize() { 
     const n = this._config?.devices?.length || 0; 
@@ -375,7 +371,6 @@ class NetDashCard extends LitElement {
   render() {
     if (!this._config) return nothing;
     
-    /* Show a friendly preview if no devices are configured yet */
     if (!this._config.devices || this._config.devices.length === 0) {
       return this._rPreview();
     }
@@ -478,6 +473,9 @@ class NetDashEditor extends LitElement {
     if (!this._config.vlans) this._config.vlans = [];
     if (!this._config.devices) this._config.devices = [];
   }
+
+  /* FIX: Setters MUST have exactly one formal parameter */
+  set hass(_hass) {}
 
   _update(fn) {
     const c = JSON.parse(JSON.stringify(this._config));
